@@ -62,7 +62,7 @@ impl PixelCanvas {
         self.canvas.finish(gfx)
     }
 
-    pub fn draw<P: NumCast + Zero + Copy>(&mut self, image: Image, params: PixelDrawParams<P>) {
+    pub fn draw<P: NumCast + Zero + Copy>(&mut self, image: &Image, params: PixelDrawParams<P>) {
 
         let ps = self.pixel_size as f32;
         let PixelDrawParams { dest, atlas_section, angle, rot_pivot, z } = params;
@@ -77,7 +77,7 @@ impl PixelCanvas {
             AtlasSection::Rect { rect } => rect,
         };
 
-        self.canvas.draw(&image, DrawParam {
+        self.canvas.draw(image, DrawParam {
             src: Rect {
                 x: atlas_rect.pos.x.to_f32().unwrap() / image_dim.x.to_f32().unwrap(),
                 y: atlas_rect.pos.y.to_f32().unwrap() / image_dim.y.to_f32().unwrap(),
