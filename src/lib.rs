@@ -7,15 +7,9 @@ use ggez::context::{ Has, HasMut };
 
 use ggez::mint::{ Point2, Vector2 };
 
+use num_traits::{ NumCast, Zero };
+
 pub use generic_discrete_2d_rotations::*;
-
-pub type Tile = u8;
-pub type Pixel = u32;
-pub type ScreenPixel = f32;
-pub type UV = f32;
-
-pub type PixelsPerTile = u8;
-pub type ScreenPixelsPerPixel = u8;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle<T> {
@@ -28,25 +22,25 @@ impl<T, V: Into<[ T; 4 ]>> From<V> for Rectangle<T> {
     }
 }
 
-pub enum AtlasSection {
+pub enum AtlasSection<P> {
     All,
-    Rect { rect: Rectangle<Pixel> },
+    Rect { rect: Rectangle<P> },
 }
 
-pub struct PixelDrawParams {
-    pub dest: Point2<Pixel>,
-    pub atlas_section: AtlasSection,
+pub struct PixelDrawParams<P> {
+    pub dest: Point2<P>,
+    pub atlas_section: AtlasSection<P>,
     pub angle: Angle<4>,
-    pub rot_pivot: Point2<Pixel>,
+    pub rot_pivot: Point2<P>,
     pub z: ZIndex,
 }
-impl Default for PixelDrawParams {
+impl<P: Zero> Default for PixelDrawParams<P> {
     fn default() -> Self {
         Self {
             atlas_section: AtlasSection::All,
-            dest: Point2 { x: 0, y: 0 },
+            dest: Point2 { x: P::zero(), y: P::zero() },
             angle: Angle::A4_0,
-            rot_pivot: Point2 { x: 0, y: 0 },
+            rot_pivot: Point2 { x: P::zero(), y: P::zero() },
             z: 0,
         }
     }
@@ -54,11 +48,11 @@ impl Default for PixelDrawParams {
 
 pub struct PixelCanvas {
     canvas: Canvas,
-    pixel_size: ScreenPixelsPerPixel,
+    pixel_size: u8,
 }
 impl PixelCanvas {
 
-    pub fn new_frame(gfx: &impl Has<GraphicsContext>, pixel_size: ScreenPixelsPerPixel) -> Self {
+    pub fn new_frame(gfx: &impl Has<GraphicsContext>, pixel_size: u8) -> Self {
         let mut canvas = Canvas::from_frame(gfx, Color::BLACK);
         canvas.set_sampler(Sampler::nearest_clamp());
         Self { canvas, pixel_size }
@@ -68,36 +62,39 @@ impl PixelCanvas {
         self.canvas.finish(gfx)
     }
 
-    pub fn draw(&mut self, image: Image, params: PixelDrawParams) {
+    pub fn draw<P: NumCast + Zero + Copy>(&mut self, image: Image, params: PixelDrawParams<P>) {
 
         let ps = self.pixel_size as f32;
         let PixelDrawParams { dest, atlas_section, angle, rot_pivot, z } = params;
 
-        let image_dim = Vector2 { x: image.width(), y: image.height() };
+        let image_dim = Vector2 {
+            x: P::from(image.width() ).unwrap(),
+            y: P::from(image.height()).unwrap(),
+        };
 
         let atlas_rect = match atlas_section {
-            AtlasSection::All => Rectangle { pos: Point2 { x: 0, y: 0 }, dim: image_dim },
+            AtlasSection::All => Rectangle { pos: Point2 { x: P::zero(), y: P::zero() }, dim: image_dim },
             AtlasSection::Rect { rect } => rect,
         };
 
         self.canvas.draw(&image, DrawParam {
             src: Rect {
-                x: atlas_rect.pos.x as f32 / image_dim.x as f32,
-                y: atlas_rect.pos.y as f32 / image_dim.y as f32,
-                w: atlas_rect.dim.x as f32 / image_dim.x as f32,
-                h: atlas_rect.dim.y as f32 / image_dim.y as f32,
+                x: atlas_rect.pos.x.to_f32().unwrap() / image_dim.x.to_f32().unwrap(),
+                y: atlas_rect.pos.y.to_f32().unwrap() / image_dim.y.to_f32().unwrap(),
+                w: atlas_rect.dim.x.to_f32().unwrap() / image_dim.x.to_f32().unwrap(),
+                h: atlas_rect.dim.y.to_f32().unwrap() / image_dim.y.to_f32().unwrap(),
             },
             color: Color::WHITE,
             transform: Transform::Values {
                 dest: Point2 {
-                    x: (dest.x + rot_pivot.x) as f32 * ps,
-                    y: (dest.y + rot_pivot.y) as f32 * ps,
+                    x: (dest.x + rot_pivot.x).to_f32().unwrap() * ps,
+                    y: (dest.y + rot_pivot.y).to_f32().unwrap() * ps,
                 },
                 rotation: angle.to_rad(),
                 scale: Vector2 { x: ps, y: ps },
                 offset: Point2 {
-                    x: rot_pivot.x as f32 / atlas_rect.dim.x as f32,
-                    y: rot_pivot.y as f32 / atlas_rect.dim.y as f32,
+                    x: rot_pivot.x.to_f32().unwrap() / atlas_rect.dim.x.to_f32().unwrap(),
+                    y: rot_pivot.y.to_f32().unwrap() / atlas_rect.dim.y.to_f32().unwrap(),
                 },
             },
             z,

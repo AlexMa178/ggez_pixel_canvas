@@ -1,6 +1,6 @@
 [package]
 name = "ggez_pixel_canvas"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "a helper for drawing in ggez with pixel art"
 repository = "https://github.com/AlexMa178/ggez_pixel_canvas"
@@ -9,3 +9,4 @@ license = "CC0-1.0"
 [dependencies]
 ggez = "0.10.0"
 generic_discrete_2d_rotations = "0.1.9"
+num-traits = "0.2.19"

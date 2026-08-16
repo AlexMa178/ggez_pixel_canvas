@@ -1,20 +1,24 @@
+use std::ops::Mul;
+
 use ggez::graphics::ZIndex;
 use ggez::mint::{ Point2, Vector2 };
 
+use num_traits::{ NumCast, ToPrimitive, Zero };
+
 use generic_discrete_2d_rotations::Angle;
 
-use crate::{ Tile, Pixel, PixelsPerTile, Rectangle, AtlasSection, PixelDrawParams };
+use crate::{ Rectangle, AtlasSection, PixelDrawParams };
 
-pub struct PDPBuilder {
-    pdp: PixelDrawParams
+pub struct PDPBuilder<P> {
+    pdp: PixelDrawParams<P>
 }
-impl PDPBuilder {
+impl<P: Zero> PDPBuilder<P> {
 
     pub fn new() -> Self {
         Self { pdp: PixelDrawParams::default() }
     }
 
-    pub fn build(self) -> PixelDrawParams {
+    pub fn build(self) -> PixelDrawParams<P> {
         self.pdp
     }
 
@@ -28,35 +32,35 @@ impl PDPBuilder {
         self
     }
 
-    pub fn dest(mut self, dest: impl Into<Point2<Pixel>>) -> Self {
+    pub fn dest(mut self, dest: impl Into<Point2<P>>) -> Self {
         self.pdp.dest = dest.into();
         self
     }
 
-    pub fn atlas_rect(mut self, atlas_rect: impl Into<Rectangle<Pixel>>) -> Self {
+    pub fn atlas_rect(mut self, atlas_rect: impl Into<Rectangle<P>>) -> Self {
         self.pdp.atlas_section = AtlasSection::Rect { rect: atlas_rect.into() };
         self
     }
 
-    pub fn rot_pivot(mut self, rot_pivot: impl Into<Point2<Pixel>>) -> Self {
+    pub fn rot_pivot(mut self, rot_pivot: impl Into<Point2<P>>) -> Self {
         self.pdp.rot_pivot = rot_pivot.into();
         self
     }
 
 }
 
-pub struct PDPTileBuilder {
-    pdp: PixelDrawParams,
-    tile_size: PixelsPerTile,
+pub struct PDPTileBuilder<P> {
+    pdp: PixelDrawParams<P>,
+    tile_size: u8,
 }
-impl PDPTileBuilder {
+impl<P: Zero + NumCast + Mul<Output = P> + Copy> PDPTileBuilder<P> {
 
-    pub fn new(tile_size: PixelsPerTile) -> Self {
+    pub fn new(tile_size: u8) -> Self {
         assert!(tile_size.is_multiple_of(2));
         Self { pdp: PixelDrawParams::default(), tile_size }
     }
 
-    pub fn build(self) -> PixelDrawParams {
+    pub fn build(self) -> PixelDrawParams<P> {
         self.pdp
     }
 
@@ -70,38 +74,49 @@ impl PDPTileBuilder {
         self
     }
 
-    pub fn pixel_dest(mut self, dest: impl Into<Point2<Pixel>>) -> Self {
+    pub fn pixel_dest(mut self, dest: impl Into<Point2<P>>) -> Self {
         self.pdp.dest = dest.into();
         self
     }
 
-    pub fn tile_dest(self, dest: impl Into<Point2<Tile>>) -> Self {
-        let ts = self.tile_size as Pixel;
-        let Point2 { x, y } = dest.into();
-        self.pixel_dest([ x as Pixel * ts, y as Pixel * ts ])
-    }
-
-    pub fn pixel_atlas_rect(mut self, atlas_rect: impl Into<Rectangle<Pixel>>) -> Self {
+    pub fn pixel_atlas_rect(mut self, atlas_rect: impl Into<Rectangle<P>>) -> Self {
         self.pdp.atlas_section = AtlasSection::Rect { rect: atlas_rect.into() };
         self
     }
 
-    pub fn tile_atlas_rect(self, atlas_rect: impl Into<Rectangle<Tile>>) -> Self {
-        let ts = self.tile_size as Pixel;
-        let Rectangle { pos: Point2 { x, y }, dim: Vector2 { x: w, y: h } } = atlas_rect.into();
-        self.pixel_atlas_rect([ x as Pixel * ts, y as Pixel * ts, w as Pixel * ts, h as Pixel * ts ])
-    }
-
-    pub fn pixel_rot_pivot(mut self, rot_pivot: impl Into<Point2<Pixel>>) -> Self {
+    pub fn pixel_rot_pivot(mut self, rot_pivot: impl Into<Point2<P>>) -> Self {
         self.pdp.rot_pivot = rot_pivot.into();
         self
     }
 
-    pub fn tile_rot_pivot(self, rot_pivot: impl Into<Point2<Tile>>) -> Self {
-        let ts = self.tile_size as Pixel;
-        let half = ts / 2;
+    pub fn tile_dest<T: ToPrimitive>(self, dest: impl Into<Point2<T>>) -> Self {
+        let ts = P::from(self.tile_size).unwrap();
+        let Point2 { x, y } = dest.into();
+        self.pixel_dest([
+            P::from(x).unwrap() * ts,
+            P::from(y).unwrap() * ts,
+        ])
+    }
+
+    pub fn tile_atlas_rect<T: ToPrimitive>(self, atlas_rect: impl Into<Rectangle<T>>) -> Self {
+        let ts = P::from(self.tile_size).unwrap();
+        let Rectangle { pos: Point2 { x, y }, dim: Vector2 { x: w, y: h } } = atlas_rect.into();
+        self.pixel_atlas_rect([
+            P::from(x).unwrap() * ts,
+            P::from(y).unwrap() * ts,
+            P::from(w).unwrap() * ts,
+            P::from(h).unwrap() * ts,
+        ])
+    }
+
+    pub fn tile_rot_pivot<T: ToPrimitive>(self, rot_pivot: impl Into<Point2<T>>) -> Self {
+        let ts = P::from(self.tile_size).unwrap();
+        let half = P::from(self.tile_size / 2).unwrap();
         let Point2 { x, y } = rot_pivot.into();
-        self.pixel_rot_pivot([ x as Pixel * ts + half, y as Pixel * ts + half ])
+        self.pixel_rot_pivot([
+             P::from(x).unwrap() * ts + half,
+             P::from(y).unwrap() * ts + half,
+        ])
     }
 
 }
