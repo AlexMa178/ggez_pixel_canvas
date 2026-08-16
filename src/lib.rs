@@ -34,11 +34,11 @@ pub enum AtlasSection {
 }
 
 pub struct PixelDrawParams {
-    dest: Point2<Pixel>,
-    atlas_section: AtlasSection,
-    angle: Angle<4>,
-    rot_pivot: Point2<Pixel>,
-    z: ZIndex,
+    pub dest: Point2<Pixel>,
+    pub atlas_section: AtlasSection,
+    pub angle: Angle<4>,
+    pub rot_pivot: Point2<Pixel>,
+    pub z: ZIndex,
 }
 impl Default for PixelDrawParams {
     fn default() -> Self {
