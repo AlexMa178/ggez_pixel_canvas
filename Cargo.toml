@@ -1,0 +1,8 @@
+[package]
+name = "ggez_pixel_canvas"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ggez = "0.10.0"
+generic_discrete_2d_rotations = "0.1.9"
