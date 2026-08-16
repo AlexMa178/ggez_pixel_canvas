@@ -2,6 +2,9 @@
 name = "ggez_pixel_canvas"
 version = "0.1.0"
 edition = "2024"
+description = "a helper for drawing in ggez with pixel art"
+repository = "https://github.com/AlexMa178/ggez_pixel_canvas"
+license = "CC0-1.0"
 
 [dependencies]
 ggez = "0.10.0"
