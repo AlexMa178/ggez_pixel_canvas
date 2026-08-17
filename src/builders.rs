@@ -3,7 +3,7 @@ use std::ops::Mul;
 use ggez::graphics::ZIndex;
 use ggez::mint::{ Point2, Vector2 };
 
-use num_traits::{ Num, NumCast, ToPrimitive, Zero };
+use num_traits::{ NumCast, ToPrimitive, Zero };
 
 use generic_discrete_2d_rotations::Angle;
 
@@ -124,14 +124,6 @@ impl<P: Zero + NumCast + Mul<Output = P> + Copy> PDPTileBuilder<P> {
             P::from(x).unwrap() * ts + if x_odd { half } else { P::zero() },
             P::from(y).unwrap() * ts + if y_odd { half } else { P::zero() },
         ])
-    }
-
-    pub fn tile_atlas_rect_and_pivot<T: ToPrimitive + Copy + Num>(self, atlas_rect: impl Into<Rectangle<T>>, pivot: impl Into<Point2<T>>) -> Self {
-        let rect = atlas_rect.into();
-        let two = T::one() + T::one();
-        let x_odd = (rect.dim.x % two).is_one();
-        let y_odd = (rect.dim.y % two).is_one();
-        self.tile_atlas_rect(rect).tile_pivot(pivot, x_odd, y_odd)
     }
 
 }
