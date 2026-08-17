@@ -12,9 +12,10 @@ use num_traits::{ NumCast, Zero };
 pub use generic_discrete_2d_rotations as rotation;
 use rotation::Angle;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle<T> {
-    pos: Point2<T>, dim: Vector2<T>
+    pub pos: Point2<T>,
+    pub dim: Vector2<T>,
 }
 impl<T, V: Into<[ T; 4 ]>> From<V> for Rectangle<T> {
     fn from(value: V) -> Self {
@@ -23,11 +24,13 @@ impl<T, V: Into<[ T; 4 ]>> From<V> for Rectangle<T> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AtlasSection<P> {
     All,
     Rect { rect: Rectangle<P> },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PixelDrawParams<P> {
     pub dest: Point2<P>,
     pub atlas_section: AtlasSection<P>,

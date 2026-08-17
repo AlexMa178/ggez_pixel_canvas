@@ -116,7 +116,6 @@ impl<P: Zero + NumCast + Mul<Output = P> + Copy> PDPTileBuilder<P> {
     }
 
     pub fn tile_pivot<T: ToPrimitive>(self, pivot: impl Into<Point2<T>>, x_odd: bool, y_odd: bool) -> Self {
-        assert!(!(x_odd || y_odd) || self.tile_size.is_multiple_of(2));
         let ts = P::from(self.tile_size).unwrap();
         let half = P::from(self.tile_size / 2).unwrap();
         let Point2 { x, y } = pivot.into();
