@@ -9,7 +9,8 @@ use ggez::mint::{ Point2, Vector2 };
 
 use num_traits::{ NumCast, Zero };
 
-pub use generic_discrete_2d_rotations::*;
+pub use generic_discrete_2d_rotations as rotation;
+use rotation::Angle;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle<T> {
@@ -74,7 +75,7 @@ impl PixelCanvas {
         };
 
         let ps = self.pixel_size as f32;
-        
+
         let PixelDrawParams { dest, atlas_section, angle, anchor, pivot, z } = params;
 
         let atlas_rect = match atlas_section {
