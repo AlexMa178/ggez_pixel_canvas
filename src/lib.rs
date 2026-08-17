@@ -89,8 +89,8 @@ impl PixelCanvas {
             color: Color::WHITE,
             transform: Transform::Values {
                 dest: Point2 {
-                    x: (dest.x - rot_pivot.x).to_f32().unwrap() * ps,
-                    y: (dest.y - rot_pivot.y).to_f32().unwrap() * ps,
+                    x: dest.x.to_f32().unwrap() * ps,
+                    y: dest.y.to_f32().unwrap() * ps,
                 },
                 rotation: angle.to_rad(),
                 scale: Vector2 { x: ps, y: ps },
