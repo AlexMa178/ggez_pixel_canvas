@@ -31,6 +31,7 @@ pub struct PixelDrawParams<P> {
     pub dest: Point2<P>,
     pub atlas_section: AtlasSection<P>,
     pub angle: Angle<4>,
+    pub anchor: Point2<P>,
     pub pivot: Point2<P>,
     pub z: ZIndex,
 }
@@ -40,6 +41,7 @@ impl<P: Zero> Default for PixelDrawParams<P> {
             atlas_section: AtlasSection::All,
             dest: Point2 { x: P::zero(), y: P::zero() },
             angle: Angle::A4_0,
+            anchor: Point2 { x: P::zero(), y: P::zero() },
             pivot: Point2 { x: P::zero(), y: P::zero() },
             z: 0,
         }
@@ -62,39 +64,50 @@ impl PixelCanvas {
         self.canvas.finish(gfx)
     }
 
-    pub fn draw<P: NumCast + Zero + Copy>(&mut self, image: &Image, params: PixelDrawParams<P>) {
+    pub fn draw<P: NumCast>(&mut self, image: &Image, params: PixelDrawParams<P>) {
 
-        let ps = self.pixel_size as f32;
-        let PixelDrawParams { dest, atlas_section, angle, pivot: rot_pivot, z } = params;
+        let f = |p: P| p.to_f32().unwrap();
 
         let image_dim = Vector2 {
-            x: P::from(image.width() ).unwrap(),
-            y: P::from(image.height()).unwrap(),
+            x: image.width()  as f32,
+            y: image.height() as f32,
         };
 
+        let ps = self.pixel_size as f32;
+        
+        let PixelDrawParams { dest, atlas_section, angle, anchor, pivot, z } = params;
+
         let atlas_rect = match atlas_section {
-            AtlasSection::All => Rectangle { pos: Point2 { x: P::zero(), y: P::zero() }, dim: image_dim },
-            AtlasSection::Rect { rect } => rect,
+            AtlasSection::All => Rectangle { pos: Point2 { x: 0., y: 0. }, dim: image_dim },
+            AtlasSection::Rect { rect } => Rectangle {
+                pos: Point2  { x: f(rect.pos.x), y: f(rect.pos.y) },
+                dim: Vector2 { x: f(rect.dim.x), y: f(rect.dim.y) },
+            },
+        };
+
+        let pivot = Point2 {
+            x: f(pivot.x),
+            y: f(pivot.y),
         };
 
         self.canvas.draw(image, DrawParam {
             src: Rect {
-                x: atlas_rect.pos.x.to_f32().unwrap() / image_dim.x.to_f32().unwrap(),
-                y: atlas_rect.pos.y.to_f32().unwrap() / image_dim.y.to_f32().unwrap(),
-                w: atlas_rect.dim.x.to_f32().unwrap() / image_dim.x.to_f32().unwrap(),
-                h: atlas_rect.dim.y.to_f32().unwrap() / image_dim.y.to_f32().unwrap(),
+                x: atlas_rect.pos.x / image_dim.x,
+                y: atlas_rect.pos.y / image_dim.y,
+                w: atlas_rect.dim.x / image_dim.x,
+                h: atlas_rect.dim.y / image_dim.y,
             },
             color: Color::WHITE,
             transform: Transform::Values {
                 dest: Point2 {
-                    x: dest.x.to_f32().unwrap() * ps,
-                    y: dest.y.to_f32().unwrap() * ps,
+                    x: (f(dest.x) + pivot.x - f(anchor.x)) * ps,
+                    y: (f(dest.y) + pivot.y - f(anchor.y)) * ps,
                 },
                 rotation: angle.to_rad(),
                 scale: Vector2 { x: ps, y: ps },
                 offset: Point2 {
-                    x: rot_pivot.x.to_f32().unwrap() / atlas_rect.dim.x.to_f32().unwrap(),
-                    y: rot_pivot.y.to_f32().unwrap() / atlas_rect.dim.y.to_f32().unwrap(),
+                    x: pivot.x / atlas_rect.dim.x,
+                    y: pivot.y / atlas_rect.dim.y,
                 },
             },
             z,
