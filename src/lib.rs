@@ -33,7 +33,7 @@ pub struct PixelDrawParams<P> {
     pub dest: Point2<P>,
     pub atlas_section: AtlasSection<P>,
     pub angle: Angle<4>,
-    pub rot_pivot: Point2<P>,
+    pub pivot: Point2<P>,
     pub z: ZIndex,
 }
 impl<P: Zero> Default for PixelDrawParams<P> {
@@ -42,7 +42,7 @@ impl<P: Zero> Default for PixelDrawParams<P> {
             atlas_section: AtlasSection::All,
             dest: Point2 { x: P::zero(), y: P::zero() },
             angle: Angle::A4_0,
-            rot_pivot: Point2 { x: P::zero(), y: P::zero() },
+            pivot: Point2 { x: P::zero(), y: P::zero() },
             z: 0,
         }
     }
@@ -67,7 +67,7 @@ impl PixelCanvas {
     pub fn draw<P: NumCast + Zero + Sub<Output = P> + Copy>(&mut self, image: &Image, params: PixelDrawParams<P>) {
 
         let ps = self.pixel_size as f32;
-        let PixelDrawParams { dest, atlas_section, angle, rot_pivot, z } = params;
+        let PixelDrawParams { dest, atlas_section, angle, pivot: rot_pivot, z } = params;
 
         let image_dim = Vector2 {
             x: P::from(image.width() ).unwrap(),

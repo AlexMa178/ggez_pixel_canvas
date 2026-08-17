@@ -42,8 +42,8 @@ impl<P: Zero> PDPBuilder<P> {
         self
     }
 
-    pub fn rot_pivot(mut self, rot_pivot: impl Into<Point2<P>>) -> Self {
-        self.pdp.rot_pivot = rot_pivot.into();
+    pub fn pivot(mut self, pivot: impl Into<Point2<P>>) -> Self {
+        self.pdp.pivot = pivot.into();
         self
     }
 
@@ -84,8 +84,8 @@ impl<P: Zero + NumCast + Mul<Output = P> + Copy> PDPTileBuilder<P> {
         self
     }
 
-    pub fn pixel_rot_pivot(mut self, rot_pivot: impl Into<Point2<P>>) -> Self {
-        self.pdp.rot_pivot = rot_pivot.into();
+    pub fn pixel_pivot(mut self, pivot: impl Into<Point2<P>>) -> Self {
+        self.pdp.pivot = pivot.into();
         self
     }
 
@@ -109,13 +109,13 @@ impl<P: Zero + NumCast + Mul<Output = P> + Copy> PDPTileBuilder<P> {
         ])
     }
 
-    pub fn tile_rot_pivot<T: ToPrimitive>(self, rot_pivot: impl Into<Point2<T>>) -> Self {
+    pub fn tile_pivot<T: ToPrimitive>(self, pivot: impl Into<Point2<T>>) -> Self {
         let ts = P::from(self.tile_size).unwrap();
         let half = P::from(self.tile_size / 2).unwrap();
-        let Point2 { x, y } = rot_pivot.into();
-        self.pixel_rot_pivot([
-             P::from(x).unwrap() * ts + half,
-             P::from(y).unwrap() * ts + half,
+        let Point2 { x, y } = pivot.into();
+        self.pixel_pivot([
+            P::from(x).unwrap() * ts + half,
+            P::from(y).unwrap() * ts + half,
         ])
     }
 
