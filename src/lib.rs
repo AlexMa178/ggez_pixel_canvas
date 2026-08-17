@@ -1,6 +1,8 @@
 mod builders;
 pub use builders::*;
 
+use std::ops::Sub;
+
 use ggez::error::GameResult;
 use ggez::graphics::{ Canvas, Color, DrawParam, GraphicsContext, Image, Rect, Sampler, Transform, ZIndex };
 use ggez::context::{ Has, HasMut };
@@ -62,7 +64,7 @@ impl PixelCanvas {
         self.canvas.finish(gfx)
     }
 
-    pub fn draw<P: NumCast + Zero + Copy>(&mut self, image: &Image, params: PixelDrawParams<P>) {
+    pub fn draw<P: NumCast + Zero + Sub<Output = P> + Copy>(&mut self, image: &Image, params: PixelDrawParams<P>) {
 
         let ps = self.pixel_size as f32;
         let PixelDrawParams { dest, atlas_section, angle, rot_pivot, z } = params;
@@ -87,8 +89,8 @@ impl PixelCanvas {
             color: Color::WHITE,
             transform: Transform::Values {
                 dest: Point2 {
-                    x: (dest.x + rot_pivot.x).to_f32().unwrap() * ps,
-                    y: (dest.y + rot_pivot.y).to_f32().unwrap() * ps,
+                    x: (dest.x - rot_pivot.x).to_f32().unwrap() * ps,
+                    y: (dest.y - rot_pivot.y).to_f32().unwrap() * ps,
                 },
                 rotation: angle.to_rad(),
                 scale: Vector2 { x: ps, y: ps },
