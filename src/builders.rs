@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use ggez::graphics::ZIndex;
 
 use glamour::{ Point2, Rect, Unit };
@@ -47,14 +49,15 @@ impl<P: Unit> PDPBuilder<P> {
 
 }
 
-pub struct PDPTileBuilder<P: Unit> {
+pub struct PDPTileBuilder<P: Unit, T: Unit<Scalar: AsPrimitive<P::Scalar>>> {
     builder: PDPBuilder<P>,
     tile_size: P::Scalar,
+    phantom: PhantomData<T>,
 }
-impl<P: Unit> PDPTileBuilder<P> {
+impl<P: Unit, T: Unit<Scalar: AsPrimitive<P::Scalar>>> PDPTileBuilder<P, T> {
 
     pub fn new(tile_size: P::Scalar) -> Self {
-        Self { builder: PDPBuilder::new(), tile_size }
+        Self { builder: PDPBuilder::new(), tile_size, phantom: PhantomData }
     }
 
     pub fn build(self) -> PixelDrawParams<P> {
@@ -85,7 +88,7 @@ impl<P: Unit> PDPTileBuilder<P> {
         Self { builder: self.builder.pivot(pivot), ..self }
     }
 
-    pub fn tile_dest<T: Unit<Scalar: AsPrimitive<P::Scalar>>>(self, dest: impl Into<[ T::Scalar; 2 ]>) -> Self {
+    pub fn tile_dest(self, dest: impl Into<[ T::Scalar; 2 ]>) -> Self {
         let ts = self.tile_size;
         let [ x, y ] = dest.into();
         self.pixel_dest([
@@ -94,7 +97,7 @@ impl<P: Unit> PDPTileBuilder<P> {
         ])
     }
 
-    pub fn tile_atlas_rect<T: Unit<Scalar: AsPrimitive<P::Scalar>>>(self, atlas_rect: impl Into<[ T::Scalar; 4 ]>) -> Self {
+    pub fn tile_atlas_rect(self, atlas_rect: impl Into<[ T::Scalar; 4 ]>) -> Self {
         let ts = self.tile_size;
         let [ x, y, w, h ] = atlas_rect.into();
         self.pixel_atlas_rect([
@@ -105,7 +108,7 @@ impl<P: Unit> PDPTileBuilder<P> {
         ])
     }
 
-    pub fn tile_anchor<T: Unit<Scalar: AsPrimitive<P::Scalar>>>(self, anchor: impl Into<[ T::Scalar; 2 ]>) -> Self {
+    pub fn tile_anchor(self, anchor: impl Into<[ T::Scalar; 2 ]>) -> Self {
         let ts = self.tile_size;
         let [ x, y ] = anchor.into();
         self.pixel_anchor([
@@ -114,7 +117,7 @@ impl<P: Unit> PDPTileBuilder<P> {
         ])
     }
 
-    pub fn tile_pivot<T: Unit<Scalar: AsPrimitive<P::Scalar>>>(self, pivot: impl Into<[ T::Scalar; 2 ]>, x_odd: bool, y_odd: bool) -> Self {
+    pub fn tile_pivot(self, pivot: impl Into<[ T::Scalar; 2 ]>, x_odd: bool, y_odd: bool) -> Self {
         let ts = self.tile_size;
         let half = ts / NumCast::from(2).unwrap();
         let [ x, y ] = pivot.into();
