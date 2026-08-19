@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "ggez_pixel_canvas"
-version = "0.1.13"
+version = "0.1.14"
 dependencies = [
  "generic_discrete_2d_rotations",
  "ggez",

@@ -34,9 +34,8 @@ impl<P: Unit> PDPBuilder<P> {
         self.pdp.dest = Point2::from_array(dest.into()); self
     }
 
-    pub fn atlas_rect(mut self, atlas_rect: impl Into<[ P::Scalar; 4 ]>) -> Self {
-        let [ x, y, w, h ] = atlas_rect.into();
-        self.pdp.atlas_section = AtlasSection::Rect { rect: Rect::from_origin_and_size([ x, y ], [ w, h ]) }; self
+    pub fn atlas_rect(mut self, atlas_rect: (impl Into<[ P::Scalar; 2 ]>, impl Into<[ P::Scalar; 2 ]>)) -> Self {
+        self.pdp.atlas_section = AtlasSection::Rect { rect: Rect::from_origin_and_size(atlas_rect.0.into(), atlas_rect.1.into()) }; self
     }
 
     pub fn anchor(mut self, anchor: impl Into<[ P::Scalar; 2 ]>) -> Self {
@@ -76,7 +75,7 @@ impl<P: Unit, T: Unit<Scalar: AsPrimitive<P::Scalar>>> PDPTileBuilder<P, T> {
         Self { builder: self.builder.dest(dest), ..self }
     }
 
-    pub fn pixel_atlas_rect(self, atlas_rect: impl Into<[ P::Scalar; 4 ]>) -> Self {
+    pub fn pixel_atlas_rect(self, atlas_rect: (impl Into<[ P::Scalar; 2 ]>, impl Into<[ P::Scalar; 2 ]>)) -> Self {
         Self { builder: self.builder.atlas_rect(atlas_rect), ..self }
     }
 
@@ -91,30 +90,26 @@ impl<P: Unit, T: Unit<Scalar: AsPrimitive<P::Scalar>>> PDPTileBuilder<P, T> {
     pub fn tile_dest(self, dest: impl Into<[ T::Scalar; 2 ]>) -> Self {
         let ts = self.tile_size;
         let [ x, y ] = dest.into();
-        self.pixel_dest([
-            x.as_() * ts,
-            y.as_() * ts,
-        ])
+        self.pixel_dest(
+            [ x.as_() * ts, y.as_() * ts ]
+        )
     }
 
-    pub fn tile_atlas_rect(self, atlas_rect: impl Into<[ T::Scalar; 4 ]>) -> Self {
+    pub fn tile_atlas_rect(self, atlas_rect: (impl Into<[ T::Scalar; 2 ]>, impl Into<[ T::Scalar; 2 ]>)) -> Self {
         let ts = self.tile_size;
-        let [ x, y, w, h ] = atlas_rect.into();
-        self.pixel_atlas_rect([
-            x.as_() * ts,
-            y.as_() * ts,
-            w.as_() * ts,
-            h.as_() * ts,
-        ])
+        let ([ x, y ], [ w, h ]) = (atlas_rect.0.into(), atlas_rect.1.into());
+        self.pixel_atlas_rect((
+            [ x.as_() * ts, y.as_() * ts ],
+            [ w.as_() * ts, h.as_() * ts ],
+        ))
     }
 
     pub fn tile_anchor(self, anchor: impl Into<[ T::Scalar; 2 ]>) -> Self {
         let ts = self.tile_size;
         let [ x, y ] = anchor.into();
-        self.pixel_anchor([
-            x.as_() * ts,
-            y.as_() * ts,
-        ])
+        self.pixel_anchor(
+            [ x.as_() * ts, y.as_() * ts ]
+        )
     }
 
     pub fn tile_pivot(self, pivot: impl Into<[ T::Scalar; 2 ]>, x_odd: bool, y_odd: bool) -> Self {
