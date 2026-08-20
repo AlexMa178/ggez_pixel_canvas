@@ -1,3 +1,6 @@
+mod to_pixel;
+pub use to_pixel::*;
+
 use ggez::error::GameResult;
 use ggez::graphics::{ Canvas, Color, DrawParam, GraphicsContext, Image, Rect as GraphicsRect, Sampler, ZIndex };
 use ggez::context::{ Has, HasMut };
@@ -9,8 +12,9 @@ use num_traits::AsPrimitive;
 pub use generic_discrete_2d_rotations as rotation;
 use rotation::Angle;
 
-pub trait AsPixel<P: Unit>: Unit<Scalar: AsPrimitive<P::Scalar>> {
-    const SIZE: P::Scalar;
+pub trait AsPixel: Unit<Scalar: AsPrimitive<<Self::PixelType as Unit>::Scalar>> {
+    type PixelType: Unit;
+    const SIZE: <Self::PixelType as Unit>::Scalar;
 }
 
 pub struct PixelCanvas {
@@ -19,7 +23,7 @@ pub struct PixelCanvas {
 }
 impl PixelCanvas {
 
-    pub fn new<T: AsPixel<impl Unit<Scalar: AsPrimitive<u32>>>>(gfx: &impl Has<GraphicsContext>, size: impl Into<[ T::Scalar; 2 ]>) -> Self {
+    pub fn new<T: AsPixel<PixelType: Unit<Scalar: AsPrimitive<u32>>>>(gfx: &impl Has<GraphicsContext>, size: impl Into<[ T::Scalar; 2 ]>) -> Self {
         let [ width, height ] = size.into();
         let image = Image::new_canvas_image(gfx, Scalar::as_(Scalar::as_(width) * T::SIZE), Scalar::as_(Scalar::as_(height) * T::SIZE), 1);
         let mut canvas = Canvas::from_image(gfx, image.clone(), Color::from_rgba(0, 0, 0, 0));
@@ -99,47 +103,24 @@ impl<P: Unit> Default for PixelDrawParams<P> {
 }
 impl<P: Unit> PixelDrawParams<P> {
 
-    pub fn dest<T: AsPixel<P>>(self, dest: impl Into<[ T::Scalar; 2 ]>) -> Self {
-        let [ x, y ] = dest.into();
-        Self { dest: Point2::new(
-            Scalar::as_(x) * T::SIZE,
-            Scalar::as_(y) * T::SIZE,
-        ), ..self }
+    pub fn dest<T: AsPixel<PixelType = P>>(self, dest: impl Into<[ T::Scalar; 2 ]>) -> Self {
+        Self { dest: Point2::<T>::from_array(dest.into()).to_pixel(), ..self }
     }
 
-    pub fn atlas_rect<T: AsPixel<P>>(self, atlas_rect: (impl Into<[ T::Scalar; 2 ]>, impl Into<[ T::Scalar; 2 ]>)) -> Self {
-        let (into_origin, into_size) = atlas_rect;
-        let ([ x, y ], [ w, h ]) = (into_origin.into(), into_size.into());
-        Self { atlas_section: AtlasSection::Rect { rect: Rect::new(
-            Point2::new(
-                Scalar::as_(x) * T::SIZE,
-                Scalar::as_(y) * T::SIZE,
-            ),
-            Size2::new(
-                Scalar::as_(w) * T::SIZE,
-                Scalar::as_(h) * T::SIZE,
-            ),
-        ) }, ..self }
+    pub fn atlas_rect<T: AsPixel<PixelType = P>>(self, atlas_rect: (impl Into<[ T::Scalar; 2 ]>, impl Into<[ T::Scalar; 2 ]>)) -> Self {
+        Self { atlas_section: AtlasSection::Rect { rect: Rect::<T>::from_origin_and_size(atlas_rect.0.into(), atlas_rect.1.into()).to_pixel() }, ..self }
     }
 
     pub fn angle(self, angle: Angle<4>) -> Self {
         Self { angle, ..self }
     }
 
-    pub fn anchor<T: AsPixel<P>>(self, anchor: impl Into<[ T::Scalar; 2 ]>) -> Self {
-        let [ x, y ] = anchor.into();
-        Self { anchor: Point2::new(
-            Scalar::as_(x) * T::SIZE,
-            Scalar::as_(y) * T::SIZE,
-        ), ..self }
+    pub fn anchor<T: AsPixel<PixelType = P>>(self, anchor: impl Into<[ T::Scalar; 2 ]>) -> Self {
+        Self { anchor: Point2::<T>::from_array(anchor.into()).to_pixel(), ..self }
     }
 
-    pub fn pivot<T: AsPixel<P>>(self, pivot: impl Into<[ T::Scalar; 2 ]>) -> Self {
-        let [ x, y ] = pivot.into();
-        Self { pivot: Point2::new(
-            Scalar::as_(x) * T::SIZE,
-            Scalar::as_(y) * T::SIZE,
-        ), ..self }
+    pub fn pivot<T: AsPixel<PixelType = P>>(self, pivot: impl Into<[ T::Scalar; 2 ]>) -> Self {
+        Self { pivot: Point2::<T>::from_array(pivot.into()).to_pixel(), ..self }
     }
 
     pub fn z(self, z: ZIndex) -> Self {
