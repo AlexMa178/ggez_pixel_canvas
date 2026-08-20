@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "ggez_pixel_canvas"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "generic_discrete_2d_rotations",
  "ggez",
@@ -867,6 +867,7 @@ checksum = "19fc433e8437a212d1b6f1e68c7824af3aed907da60afa994e7f542d18d12aa9"
 dependencies = [
  "approx",
  "bytemuck",
+ "mint",
 ]
 
 [[package]]
@@ -888,6 +889,7 @@ dependencies = [
  "approx",
  "bytemuck",
  "glam 0.30.10",
+ "mint",
  "num-traits",
 ]
 
