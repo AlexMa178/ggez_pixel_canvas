@@ -23,8 +23,8 @@ pub struct PixelCanvas {
 }
 impl PixelCanvas {
 
-    pub fn new<T: AsPixel<PixelType: Unit<Scalar: AsPrimitive<u32>>>>(gfx: &impl Has<GraphicsContext>, size: impl Into<[ T::Scalar; 2 ]>) -> Self {
-        let Size2 { width, height } = Size2::<T>::from_array(size.into()).to_pixel().as_::<u32>();
+    pub fn new<T: AsPixel<PixelType: Unit<Scalar: AsPrimitive<u32>>>>(gfx: &impl Has<GraphicsContext>, size: impl Into<Size2<T>>) -> Self {
+        let Size2 { width, height } = size.into().to_pixel().as_::<u32>();
         let image = Image::new_canvas_image(gfx, width, height, 1);
         let mut canvas = Canvas::from_image(gfx, image.clone(), Color::from_rgba(0, 0, 0, 0));
         canvas.set_sampler(Sampler::nearest_clamp());
